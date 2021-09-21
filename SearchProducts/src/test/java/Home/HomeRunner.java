@@ -1,22 +1,16 @@
 package Home;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
-import java.util.Date;
-
 import org.junit.runner.RunWith;
 
+import io.cucumber.java.After;
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
-import io.cucumber.java.After;
-
 import utils.WD;
 
 @RunWith(Cucumber.class)
-@CucumberOptions(features = "src/test/java/Home",
+@CucumberOptions(features = "src/test/java/Home/Home.feature",
 tags = "@SearchProducts",
-glue = "Home")
+glue = {""})
 public class HomeRunner {
 	
 	@After("@End")

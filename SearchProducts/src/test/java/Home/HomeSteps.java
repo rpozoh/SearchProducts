@@ -102,7 +102,8 @@ public class HomeSteps {
 	}
 	
 	/**
-	 * 
+	 * Método para tomar construir la estructura de los datos capturados
+	 * Se escribe el archivo con la estructura constuida
 	 */
 	@Then("^Se registran los datos capturados$")
 	public void se_registran_los_datos_capturados() {
