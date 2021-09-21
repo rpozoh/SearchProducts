@@ -9,7 +9,6 @@ Feature: Como usuario de los videojuegos y amante de la tecnología
     
   @End
   Scenario: Realizar la búsqueda de los productos deseados
-  	Given Se recorre la lista de los productos deseados
-  	When Se realiza la búsqueda de cada uno de dichos productos capturando los datos requeridos
-  	And Se revisa que se encuentren los productos deseados
+  	Given Se realiza la busqueda de cada uno de dichos productos capturando los datos requeridos
+  	When Se revisa que se encuentren los productos deseados
   	Then Se registran los datos capturados

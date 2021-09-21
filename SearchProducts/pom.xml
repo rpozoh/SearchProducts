@@ -24,6 +24,8 @@
 		<testng.version>6.10</testng.version>
 		<cucumber.version>6.6.1</cucumber.version>
 		<log4j.version>1.2.17</log4j.version>
+		<commons.loggin.version>1.2</commons.loggin.version>
+		<opencsv.version>4.1</opencsv.version>
 		<maven.compiler.version>3.6.0</maven.compiler.version>
 	</properties>
 	<dependencies>
@@ -82,8 +84,13 @@
 		<dependency>
 		  	<groupId>commons-logging</groupId>
 		  	<artifactId>commons-logging</artifactId>
-		  	<version>1.2</version>
+		  	<version>${commons.loggin.version}</version>
 		  	<scope>compile</scope>
+		</dependency>
+		<dependency>
+		    <groupId>com.opencsv</groupId>
+		    <artifactId>opencsv</artifactId>
+		    <version>${opencsv.version}</version>
 		</dependency>
 	</dependencies>
 	<build>

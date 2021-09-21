@@ -1,31 +1,39 @@
 package Home;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.testng.Assert;
 
+import com.opencsv.CSVWriter;
+
 import DTO.ProductDTO;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import utils.Constants;
 import utils.Endpoints;
-import utils.File;
+import utils.Files;
 import utils.WD;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class HomeSteps {
 	
 	static WebDriver driver;
 	static Wait<WebDriver> wait;
-	List<ProductDTO> productsDTO;
+	List<ProductDTO> productsDTO = new ArrayList<ProductDTO>();
+	Integer fileContentLength = 0;
 	
 	public HomeSteps() {
 		driver = WD.driver;
@@ -65,16 +73,43 @@ public class HomeSteps {
 	
 	/**
 	 * Método para comenzar a leer la lista de los productos que se desean buscar
+	 * Luego realizar la búsqueda de dichos productos y capturar su información
 	 * Para este caso se usa un nuevo escenario y por ello comienza con la etiqueta Given
 	 * En el archivo los nombres de los productos van separados por ; en una sola línea
 	 */
-	@Given("^Se recorre la lista de los productos deseados$")
-	public void se_recorre_la_lista_de_los_productos_deseados() {
+	@Given("^Se realiza la busqueda de cada uno de dichos productos capturando los datos requeridos$")
+	public void se_realiza_la_busqueda_de_cada_uno_de_dichos_productos_capturando_los_datos_requeridos() {
 		System.out.println("HomeSteps.se_recorre_la_lista_de_los_productos_deseados: INICIO");
 		String fileContent = getInputFileContent();
 		String[] productsName = separateInputFileContent(fileContent);
+		fileContentLength = productsName.length;
 		searchProducts(productsName);
 		System.out.println("HomeSteps.se_recorre_la_lista_de_los_productos_deseados: FIN");
+	}
+	
+	/**
+	 * Método para verificar si se encontraron o no todos los productos
+	 */
+	@When("^Se revisa que se encuentren los productos deseados$")
+	public void se_revisa_que_se_encuentren_los_productos_deseados() {
+		System.out.println("HomeSteps.se_revisa_que_se_encuentren_los_productos_desea: INICIO");
+		if(fileContentLength == productsDTO.size()) {
+			System.out.println("Se encontraron todos los productos");
+		} else {			
+			System.out.println("Algunos de los productos no se encontraron, se debe revisar");
+		}
+		System.out.println("HomeSteps.se_revisa_que_se_encuentren_los_productos_deseados: FIN");
+	}
+	
+	/**
+	 * 
+	 */
+	@Then("^Se registran los datos capturados$")
+	public void se_registran_los_datos_capturados() {
+		System.out.println("HomeSteps.se_registran_los_datos_capturados: INICIO");
+		File file = Files.createFile("output_");
+		generateCSV(file);
+		System.out.println("HomeSteps.se_registran_los_datos_capturados: FIN");
 	}
 	
 	/**
@@ -85,7 +120,7 @@ public class HomeSteps {
 		BufferedReader br = null;
 		String products = "";
 		try {
-			br = new BufferedReader(new FileReader(File.getInputFile(Constants.INPUT_FILE)));
+			br = new BufferedReader(new FileReader(Files.getInputFile(Constants.INPUT_FILE)));
 			products = br.readLine();
 		} catch(IOException ioex) {
 			System.out.println("Error en la lectura del archivo " + ioex.getCause());
@@ -112,8 +147,10 @@ public class HomeSteps {
 		for(String product : productsName) {
 			HomeObjects.inputSearch(wait).sendKeys(product);
 			HomeObjects.buttonSearch(wait).click();
-			HomeObjects.aFirstProductDetails(wait).click();
-			captureData();
+			if(!HomeObjects.divNotFoundProducts(wait).getText().equalsIgnoreCase(Constants.NOT_PRODUCTS_FOUND)) {				
+				HomeObjects.aFirstProductDetails(wait).click();
+				captureData();
+			}
 		}
 	}
 	
@@ -134,6 +171,7 @@ public class HomeSteps {
 			productDTO.setStoreAvailability(verifyStoreAvailability());
 			productDTO.setWebAvailability(verifyWebAvailability());
 		}
+		productsDTO.add(productDTO);
 	}
 	
 	/**
@@ -154,7 +192,7 @@ public class HomeSteps {
 	 * @return Boolean: devuelve un boolean que representa la disponibilidad del producto para compra en tienda
 	 */
 	public Boolean verifyStoreAvailability() {
-		if(HomeObjects.tdStoreStock(wait).getText().equalsIgnoreCase(Constants.AVAILABILITY)) { 
+		if(HomeObjects.tdStoreStock(wait, Constants.STORE).getText().equalsIgnoreCase(Constants.AVAILABILITY)) { 
 			return true;
 		} else {
 			return false;
@@ -172,5 +210,36 @@ public class HomeSteps {
 		} else {
 			return false;
 		}
+	}
+	
+	/**
+	 * Método para generar el csv con la información de los productos
+	 * @param file: Nombre y ruta del archivo que se va a generar
+	 */
+	public void generateCSV(File file) {
+		try {			
+			FileWriter fileWriter = new FileWriter(file);
+			CSVWriter writer = new CSVWriter(fileWriter, ';',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END) ;
+			writer.writeAll(generateData());
+			writer.close();
+		} catch (IOException ioex) {
+			System.out.println("Error en la generación del archivo " + ioex.getCause());
+		}
+	}
+	
+	/**
+	 * Método para tomar el objeto construido en la búsqueda de los productos y guardarlo para enviarlos al archivo
+	 * @return data: Se devuelve la estructura para escribir el archivo
+	 */
+	public List<String[]> generateData() {
+		List<String[]> data = new ArrayList<String[]>();
+		data.add(new String[] {"Nombre Producto","SKU","Disponibilidad en Tienda","Disponibilidad Web"});
+		for(ProductDTO product : productsDTO) {
+			data.add(new String[] {StringUtils.stripAccents(product.getName()),product.getSku(),product.getStoreAvailability().toString(),product.getWebAvailability().toString()});
+		}
+		return data;
 	}
 }

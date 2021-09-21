@@ -18,6 +18,10 @@ public class HomeObjects {
 		return utils.WaitElements.waitElement(wait, "//input[@id='strSearch']/following::input[1]");
 	}
 	
+	public static WebElement divNotFoundProducts(Wait<WebDriver> wait) {
+		return utils.WaitElements.waitElement(wait, "//div[@id='ResultadoBusqueda']/div[1]");
+	}
+	
 	public static WebElement aFirstProductDetails(Wait<WebDriver> wait) {
 		return utils.WaitElements.waitElement(wait, "//div[@id='ResultadoBusqueda']/div[1]/div[1]/a");
 	}
@@ -42,7 +46,7 @@ public class HomeObjects {
 		return utils.WaitElements.waitElement(wait, "//table[@id='tblStock']/tbody/tr[2]/td[2]");
 	}
 	
-	public static WebElement tdStoreStock(Wait<WebDriver> wait) {
-		return utils.WaitElements.waitElement(wait, "//table[@id='tblStock']/tbody/tr[16]/td[2]");
+	public static WebElement tdStoreStock(Wait<WebDriver> wait, String store) {
+		return utils.WaitElements.waitElement(wait, String.format("//table[@id='tblStock']/tbody/tr/td/b[text()='%s']/parent::td/following::td[1]", store));
 	}
 }
